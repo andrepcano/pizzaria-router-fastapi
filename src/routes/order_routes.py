@@ -9,4 +9,4 @@ async def pedidos():
     """
     Essa é a rota padrão de pedidos do nosso sistema. Todas as rotas de pedidos precisam de autenticação
     """
-    return {"mensagem: você acessou a rota de pedidos"}
+    return {"mensagem": "você acessou a rota de pedidos"}

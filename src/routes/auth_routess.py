@@ -9,4 +9,4 @@ async def auth():
     """
     Essa é a rota padrão de autenticação do nosso sistema
     """
-    return {"mensagem: você acessou a rota padrão de autenticação"}
+    return {"mensagem": "você acessou a rota padrão de autenticação"}
