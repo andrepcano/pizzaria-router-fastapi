@@ -1,10 +1,8 @@
-import bcrypt
 from fastapi import FastAPI
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 import os
-
-from pydantic import deprecated
+from fastapi.security import OAuth2PasswordBearer
 
 load_dotenv()
 
@@ -16,7 +14,7 @@ app = FastAPI()
 
                             # schemes = validação de dados
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto") # deprecated="auto" = se a cryptografia se torenar obsoleta ele descarta
-
+oauth2_schema = OAuth2PasswordBearer(tokenUrl="auth/login-form") # SEMPRE tem que passar a URL do token
 
 from src.routes.auth_routess import auth_router
 from src.routes.order_routes import order_router

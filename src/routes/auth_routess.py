@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.model.models import Usuario
-from src.dependencies import pegar_sessao
+from src.dependencies import pegar_sessao, verificar_token
 from main import SECRET_KEY, bcrypt_context, ACESS_TOKEN_EXPIRE_MINUTES, ALGORITHM
 from src.schemas import LoginSchema, UsuarioSchema
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
+from fastapi.security import OAuth2PasswordRequestForm
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"]) # prefix= primeiro nome que ficará no endpoint, tags= nome geral na documentação
 
@@ -13,7 +14,7 @@ auth_router = APIRouter(prefix="/auth", tags=["auth"]) # prefix= primeiro nome q
 def criar_token(id_usuario, duracao_token=timedelta(minutes=ACESS_TOKEN_EXPIRE_MINUTES)):
 
     data_expiracao_token = datetime.now(timezone.utc) + duracao_token # data expiração token
-    dict_info = {"sub": id_usuario, "exp": data_expiracao_token} # sub = id_usuario, exp = expire date do token
+    dict_info = {"sub": str(id_usuario), "exp": data_expiracao_token} # sub = id_usuario, exp = expire date do token
     jwt_codificado = jwt.encode(dict_info, SECRET_KEY, ALGORITHM)
     return jwt_codificado
 
@@ -26,14 +27,6 @@ def autenticar_usuario(email, senha, session):
         return False
 
     return usuario
-
-def verificar_token(token, session: Session = Depends(pegar_sessao)):
-
-    # verificar se o token é valido
-    # extrair o id do usuario do token
-    usuario = session.query(Usuario).filter(Usuario.id==1).first() # da o primeiro usuario do banco de dados
-    return usuario
-
 
 
 @auth_router.get("/")
@@ -71,24 +64,38 @@ async def login(login_schema: LoginSchema, session: Session = Depends(pegar_sess
     if not usuario:
         raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais inválidas!")
     else:
-        acess_token = criar_token(usuario.id)
+        access_token = criar_token(usuario.id)
         refresh_token = criar_token(usuario.id, duracao_token=timedelta(days=7))
-        return {"acess_token": acess_token,  # Token JWT gerado para autenticar o usuário nas próximas requisições.
+        return {"access_token": access_token,  # Token JWT gerado para autenticar o usuário nas próximas requisições.
                 "refresh_token": refresh_token, # Token de longa duração usado para obter um novo access token quando o atual expirar, sem exigir novo login.
                 "token_type": "Bearer"       # Define o tipo de autenticação: Bearer indica que o token será enviado no cabeçalho Authorization.
                 }
         # JWT Bearer
         # headers = {"Authorization": "Bearer token"}
+
+# login-form -> usado pelo botão "Authorize" do /docs (formulário padrão OAuth2 com username e password)
+@auth_router.post("/login-form")
+async def login_form(dados_formulario: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(pegar_sessao)):
+
+    usuario = autenticar_usuario(dados_formulario.username, dados_formulario.password, session) # Autentica Usuario: o OAuth2 sempre chama o campo de "username", então aqui ele recebe o email
+    if not usuario:
+        raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais inválidas!") # Credenciais erradas: interrompe e devolve o erro
+    else:
+        access_token = criar_token(usuario.id) # Gera só o access token, sem refresh, pois esse login serve para testar rotas protegidas no /docs
+        return {"access_token": access_token, 
+                "token_type": "Bearer"       
+                }
         
 @auth_router.get("/refresh")
-async def use_refresh_token(token_usuario):
-    # verificar o token
-    usuario = verificar_token(token_usuario)
+async def use_refresh_token(usuario: Usuario = Depends(verificar_token)): # verificar o token
+
     acess_token = criar_token(usuario.id)
     return {
         "acess_token": acess_token,
-        "token_type": "Bearer"
+        "token_type": "Bearer" # Padrão "OAuth2" de autenticação, que tem que ser passado pelo header da requisição
     }
+
+
 
 
 
