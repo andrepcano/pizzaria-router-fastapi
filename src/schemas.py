@@ -19,8 +19,8 @@ class UsuarioSchema(BaseModel):
     nome: str
     email: str
     senha: str
-    ativo: Optional[bool]
-    admin: Optional[bool]
+    ativo: Optional[bool] = True
+    admin: Optional[bool] = False
 
     class Config:
         from_attributes = True # Permite que o Pydantic leia os dados diretamente dos atributos de objetos (ex.: objetos do SQLAlchemy), sem precisar receber um dicionário.

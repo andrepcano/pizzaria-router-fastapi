@@ -48,9 +48,11 @@ async def criar_conta(usuario_schema: UsuarioSchema, session: Session = Depends(
         """
               # Esse HTTP serve para personalizar a mensagem de ERRO
         raise HTTPException(status_code=400, detail="Email do usuário já cadastrado") # raise = usado para exception na hora de mandar o ERRO
+    elif usuario_schema.admin:
+        raise HTTPException(status_code=403, detail="Você não pode criar um usuário admin")
     else:
         senha_criptografada = bcrypt_context.hash(usuario_schema.senha) # Cryptografando
-        novo_usuario = Usuario(usuario_schema.nome, usuario_schema.email, senha_criptografada, usuario_schema.ativo, usuario_schema.admin)
+        novo_usuario = Usuario(usuario_schema.nome, usuario_schema.email, senha_criptografada, usuario_schema.ativo, False)
         session.add(novo_usuario)
         session.commit()
         return {"mensagem": f"Usuário cadastrado com sucesso: {usuario_schema.email}"}
