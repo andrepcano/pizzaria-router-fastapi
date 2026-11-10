@@ -40,3 +40,14 @@ class LoginSchema(BaseModel):
 
     class Config:
         from_attributes = True 
+
+class ItemPedidoSchema(BaseModel):
+
+        quantidade: int
+        sabor: str
+        tamanho: str
+        preco_unitario: float
+        # id_pedido = int # Não precisa adicionar ele aq pq já esta passando ele na rota em (adicionar_item_pedido)
+
+        class Config:
+            from_attributes = True 

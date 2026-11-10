@@ -6,7 +6,7 @@ Sempre que alterar os modelos (tabelas/colunas), gere e aplique a migração:
 """
 
 from sqlalchemy import create_engine, Column, String, Boolean, Integer, Float, ForeignKey
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy_utils.types import ChoiceType
 
 db = create_engine("sqlite:///banco.db") # Cria banco de dados
@@ -49,16 +49,23 @@ class Pedido(Base):
     status = Column("status", String) # pendente , finalizado, cancelado | Choicetypes garante a integridade e so vai ter textos padrões
     usuario = Column("usuario", ForeignKey("usuarios.id"), )
     preco_total = Column("preco_total", Float)
-    # itens = Column()
+    itens = relationship("ItemPedido", cascade="all, delete") # Conecta duas tabelas, (cascade) = Se deletar pedido ex:id=2 vai olhar todos os itens relacionados com ele e deletar
 
     def __init__(self, usuario, status="PENDENTE", preco_total=0):
         self.usuario = usuario
         self.preco_total = preco_total
         self.status = status
 
+    def calcular_preco(self):
+
+        # percorrer todos os itens do pedido
+        # somar todos os precos de todos os itens do pedido
+        # editar no campo "preco" o valor final do preco do pedido
+        self.preco_total = sum(item.preco_unitario * item.quantidade for item in self.itens) 
+
 #ItensPedido
 
-class ItensPedido(Base): 
+class ItemPedido(Base): 
     __tablename__ = "itens_pedido"
 
     # TAMANHO_PIZZA = [
