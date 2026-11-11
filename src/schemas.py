@@ -12,7 +12,7 @@
 # - Gerar a documentação do Swagger (/docs) com os campos esperados.
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class UsuarioSchema(BaseModel):
 
@@ -43,11 +43,22 @@ class LoginSchema(BaseModel):
 
 class ItemPedidoSchema(BaseModel):
 
-        quantidade: int
-        sabor: str
-        tamanho: str
-        preco_unitario: float
-        # id_pedido = int # Não precisa adicionar ele aq pq já esta passando ele na rota em (adicionar_item_pedido)
+    quantidade: int
+    sabor: str
+    tamanho: str
+    preco_unitario: float
+    # id_pedido = int # Não precisa adicionar ele aq pq já esta passando ele na rota em (adicionar_item_pedido)
 
-        class Config:
-            from_attributes = True 
+    class Config:
+        from_attributes = True 
+
+
+class ResponsePedidoSchema(BaseModel): # Informações de retorno/resposta
+
+    id: int
+    status: str
+    preco_total: float
+    itens: list[ItemPedidoSchema]
+
+    class Config:
+        from_attributes = True 
